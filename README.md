@@ -1,4 +1,4 @@
-### Run a quick accessibility test with full control.
+### Run a quick accessibility test with full control
 #### Decide what violation standards you want to test against or test against all standards
 
 - Clone this repo `$ git clone https://github.com/omar-aziz/a11y-axe`
