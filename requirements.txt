@@ -1,7 +1,2 @@
-contextlib
-time
-sys
-os
-
-axe-selenium-python
-selenium
+axe-selenium-python==2.1.6
+selenium==3.141.0

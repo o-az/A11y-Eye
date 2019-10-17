@@ -12,15 +12,18 @@ from axe_selenium_python import Axe
 from selenium import webdriver
 
 # Tuple of all standard tags
-all_tags = 'wcag2a', 'wcag2aa', 'wcag21aa', 'section508', 'best-practice', 'experimental'
+all_tags = 'wcag2a', 'wcag2aa', 'wcag21aa', 'wcag244', 'wcag311', 'section508', 'best-practice', 'section508.22.a', \
+            'experimental', 'cat'
 
 
 class Driver:
-    def __init__(self, driver=None):
+    def __init__(self, driver=None, x=None):
         """ By default it will be pointing to chromedriver, using
             the browser options for Chrome browser and using Chrome
             driver unless explicitly telling it 'firefox'
         """
+        self.driver = driver
+        self.x = x
         path = '/Users/omarbinsalamah/PycharmProjects/a11y-axe/drivers/geckodriver' if driver == 'firefox' \
             else '/Users/omarbinsalamah/PycharmProjects/a11y-axe/drivers/chromedriver'
 
@@ -28,31 +31,35 @@ class Driver:
             else webdriver.ChromeOptions()
 
         if driver is 'firefox':
-            self.drive = webdriver.Firefox(
-                options=self.options,
-                executable_path=path)
+            self.drive = webdriver.Firefox(options=self.options, executable_path=path)
 
         else:
             self.options.add_argument("disable-infobars")
             self.options.add_argument("--disable-extensions")
             self.options.add_argument("--headless")
-            self.drive = webdriver.Chrome(
-                options=self.options,
-                executable_path=path)
+            self.drive = webdriver.Chrome(options=self.options, executable_path=path)
 
-        # Link of site to be aXed ;)
-        self.link = sys.argv[1]
+        # Link of web-page to be aXe-d
+        self.link = sys.argv[1] if len(sys.argv) > 1 \
+            else self.x
+            # else sys.exit('Error: You did not provide a web-page link')
+
         self.drive.get(self.link)
 
 
 class A11y(Driver):
+
     def __init__(self):
+        super().__init__('firefox') if len(sys.argv) > 3 and sys.argv[3] == 'firefox' \
+            else super().__init__(x='https://google.com')
 
-        # For Firefox, change to super().__init__('firefox')
-        super().__init__()
+        self.report = []
 
-        """ Change the tags to whatever you want to test against """
-        self.report, self.tags = [], ['best-practice']
+        """ User provided tags to test against. 
+            If none provided, it'll test against all tags
+        """
+        self.tags = [tag for tag in sys.argv[2].split(', ')] if len(sys.argv) > 2 else []
+        print(self.tags)
 
     def run_axe(self):
         axe = Axe(self.drive)
@@ -61,13 +68,12 @@ class A11y(Driver):
 
         # If no tags provided then attach all violations to report
         if len(self.tags) == 0:
-            for violation in results['violations']:
-                self.report.append(violation)
+            [self.report.append(violation) for violation in results['violations']]
 
         # Compare tags provided vs. standard tags declared in beginning of file
         # if nothing in common then raise error
         elif not bool(set(all_tags) & set(self.tags)):
-            raise ValueError('Typo: Double check the tags you provided')
+            raise ValueError(f"\n{sys.argv[2]} is not a valid tag\nSelect one from: {all_tags}")
 
         # Loop through violations that contain tags provided and attach them to report
         else:
@@ -75,6 +81,7 @@ class A11y(Driver):
                            if not set(violation['tags']).isdisjoint(self.tags)]
 
         axe.write_results(self.report, 'a11y.json')
+        print(f"{self.x}\n\n {self.report}")
         self.drive.close()
 
 
@@ -86,7 +93,7 @@ def main():
     below: how long the aXe test took to execute. """
 if __name__ == '__main__':
     start = time.time()
-    sys.stdout.write('Started Axe Accessibility Test\n')
+    sys.stdout.write('Starting Axe Accessibility Test . . .\n')
     main()
     sys.stdout.write(f"Execution time {(time.time() - start).__round__(2)} Seconds")
     sys.stdout.write('\nFinished Axe Accessibility Test')
