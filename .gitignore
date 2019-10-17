@@ -2,3 +2,8 @@
 .idea/
 
 a11y.json
+
+__pycache__
+__pycache__/
+
+.pyc
