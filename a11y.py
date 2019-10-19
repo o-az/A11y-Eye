@@ -13,7 +13,7 @@ from selenium import webdriver
 
 # Tuple of all standard tags
 all_tags = 'wcag2a', 'wcag2aa', 'wcag21aa', 'wcag244', 'wcag311', 'section508', 'best-practice', 'section508.22.a', \
-            'experimental', 'cat'
+           'experimental', 'cat'
 
 
 class Driver:
@@ -34,15 +34,16 @@ class Driver:
             self.drive = webdriver.Firefox(options=self.options, executable_path=path)
 
         else:
-            self.options.add_argument("disable-infobars")
-            self.options.add_argument("--disable-extensions")
-            self.options.add_argument("--headless")
+            chrome_arguments = ["disabled-infobars", "--disable-extensions", "--headless"]
+            for argument in chrome_arguments:
+                self.options.add_argument(argument)
+
             self.drive = webdriver.Chrome(options=self.options, executable_path=path)
 
         # Link of web-page to be aXe-d
         self.link = sys.argv[1] if len(sys.argv) > 1 \
             else self.x
-            # else sys.exit('Error: You did not provide a web-page link')
+        # else sys.exit('Error: You did not provide a web-page link')
 
         self.drive.get(self.link)
 
@@ -51,15 +52,24 @@ class A11y(Driver):
 
     def __init__(self):
         super().__init__('firefox') if len(sys.argv) > 3 and sys.argv[3] == 'firefox' \
-            else super().__init__(x='https://google.com')
+            else super().__init__(x='https://example.com')
 
-        self.report = []
+        self.full_report = []
+        self.parsed_report = []
 
         """ User provided tags to test against. 
             If none provided, it'll test against all tags
         """
         self.tags = [tag for tag in sys.argv[2].split(', ')] if len(sys.argv) > 2 else []
-        print(self.tags)
+
+    # Helper function to parse only the relevant information from the report
+    def parse_report(self, report):
+        relevant_info = ['description', 'help', 'helpUrl', 'impact', 'tags']
+        for info in report:
+            for key, value in list(info.items()):
+                if key not in relevant_info:
+                    info.pop(key, None)
+            self.parsed_report.append(info)
 
     def run_axe(self):
         axe = Axe(self.drive)
@@ -68,7 +78,7 @@ class A11y(Driver):
 
         # If no tags provided then attach all violations to report
         if len(self.tags) == 0:
-            [self.report.append(violation) for violation in results['violations']]
+            [self.full_report.append(violation) for violation in results['violations']]
 
         # Compare tags provided vs. standard tags declared in beginning of file
         # if nothing in common then raise error
@@ -77,12 +87,11 @@ class A11y(Driver):
 
         # Loop through violations that contain tags provided and attach them to report
         else:
-            self.report = [violation for violation in results['violations']
-                           if not set(violation['tags']).isdisjoint(self.tags)]
+            self.full_report = [violation for violation in results['violations']
+                                if not set(violation['tags']).isdisjoint(self.tags)]
 
-        axe.write_results(self.report, 'a11y.json')
-        print(f"{self.x}\n\n {self.report}")
-        self.drive.close()
+        self.parse_report(self.full_report)
+        axe.write_results(self.full_report, 'a1y.json')
 
 
 def main():
