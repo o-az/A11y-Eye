@@ -7,7 +7,7 @@ from axe_selenium_python import Axe
 from selenium import webdriver
 
 # All standard tags
-all_tags = 'wcag2a', 'wcag2aa', 'wcag21aa', 'wcag244', 'wcag311', 'section508',\
+all_tags = 'wcag2a', 'wcag2aa', 'wcag21aa', 'wcag244', 'wcag311', 'section508', \
            'best-practice', 'section508.22.a', 'experimental', 'cat.aria'
 
 
@@ -95,6 +95,7 @@ class A11y(Driver):
     You can pass tags in a string separated by commas for example, "wcag2aa, section508".
     If you don't pass anything, it will test for wcag2aa only
     """
+
     def scan_tags(self):
         if len(sys.argv) > 2:
             self.tags += [tag for tag in sys.argv[2].split(', ')]
@@ -104,7 +105,7 @@ class A11y(Driver):
         # Compare tags provided vs. standard tags declared in beginning of file
         # if nothing in common then raise error
         if len(self.tags) > 0 and not bool(set(all_tags) & set(self.tags)):
-            raise ValueError(f"{sys.argv[2]} is not a valid tag\nTry from: {all_tags}")
+            raise ValueError(f"{sys.argv[2]} is not a valid tag. Try from: {all_tags}")
 
         return self.tags
 
@@ -126,12 +127,14 @@ class A11y(Driver):
 
         # Loop through violations that contain tags provided and attach them to report
         else:
-            self.full_report = [violation for violation in results['violations']
-                                if not set(violation['tags']).isdisjoint(self.scan_tags())]
+            [self.full_report.append(violation) for violation in results['violations']
+             if not set(violation['tags']).isdisjoint(self.scan_tags())]
 
-        self.parse_report(self.full_report)
-        # axe.write_results(
-        #         self.full_report, f'{platform.uname()[1]}-{time.strftime("%Y%m%d-%H%M%S")}.json')
+        if len(self.full_report) == 0:
+            self.parsed_report.append({"No a11y violations found for the following tags": list(set(self.scan_tags()))})
+        else:
+            self.parse_report(self.full_report)
+
         axe.write_results(
                 self.parsed_report, f'{platform.uname()[1]}-{time.strftime("%Y%m%d-%H%M%S")}.json')
         self.driver.close()
