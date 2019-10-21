@@ -7,3 +7,8 @@ __pycache__
 __pycache__/
 
 .pyc
+
+.t
+.t/
+
+Omars-MacBook-Pro.local-*.json
