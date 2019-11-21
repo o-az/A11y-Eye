@@ -43,7 +43,7 @@ class Driver:
     In order to make parameters optional, they're set to None
     Reason: Because default is Chrome, so no need to explicitly state
     If Firefox is desired, then explicitly state 'firefox' down in A11y class
-    or when using as a method. I,e,. A11y('act.org', 'firefox').run_axe()
+    or when using as a method. I,e,. A11y('example.com', 'firefox').run_axe()
     """
 
     def __init__(
@@ -113,7 +113,7 @@ class A11y(Driver):
         """
         :param browser: Optionally specify to 'firefox' or ignore it and it'll default to chrome.
         :param link: When using it as a method, specify the link to the web-page you want to test
-        # Like this: A11y(''www.act.org', 'firefox').run_axe(), or leave the 2nd parameter empty
+        # Like this: A11y(''www.example.com', 'firefox').run_axe(), or leave the 2nd parameter empty
         """
         if self.broswer_argument == 'firefox':
             super().__init__(driver='firefox')
@@ -126,7 +126,7 @@ class A11y(Driver):
         self.tags = []
     """
     In command line, you can pass tags in a string separated by commas for example, "wcag2aa, section508",
-    or you can run as a method and it will by default test for wcag2aa. I,e,. Axe('act.org').run_axe()
+    or you can run as a method and it will by default test for wcag2aa. I,e,. Axe('example.com').run_axe()
     If you don't pass anything, it will test for wcag2aa only
     """
 
